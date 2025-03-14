@@ -42,34 +42,32 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
     const idNum = Number(id);
     const commitNum = Number(commit);
 
-    // Check if basic fields are filled and valid
     if (!id || !name || !commit || commitNum < 0) {
       setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring, shu jumladan Test ID!");
       return;
     }
 
-    // Check if the ID already exists
     const existingTest = useTestStore.getState().tests.find((t) => t.id === idNum);
     if (existingTest) {
       setErrorMessage("Bu ID allaqachon mavjud! Iltimos, boshqa ID kiriting.");
       return;
     }
 
-    // Check if all question fields are filled
     if (questions.some((q) => q.trim() === "")) {
       setErrorMessage("Iltimos, barcha savol maydonlarini to‘ldiring!");
       return;
     }
 
-    // If no errors, proceed with adding the test
-    addTest({
+    const newTest: Test = {
       id: idNum,
       name,
       commit: commitNum,
       checked: 0,
       active: true,
       questions,
-    });
+    };
+
+    addTest(newTest);
     setErrorMessage("");
     setIsAdding(false);
   };

@@ -1,6 +1,5 @@
-// src/store.ts
 import { create } from "zustand";
-import { persist } from "zustand/middleware"; // Optional: for persistence across reloads
+import { persist } from "zustand/middleware"; 
 
 interface Test {
   id: number;
@@ -19,7 +18,7 @@ interface TestStore {
 }
 
 export const useTestStore = create<TestStore>()(
-  persist( // Optional: persists state in localStorage
+  persist( 
     (set) => ({
       tests: [
         {
@@ -50,7 +49,7 @@ export const useTestStore = create<TestStore>()(
         set((state) => ({ tests: state.tests.filter((t) => t.id !== id) })),
     }),
     {
-      name: "test-store", // Name for localStorage key (optional)
+      name: "test-store", 
     }
   )
 );
