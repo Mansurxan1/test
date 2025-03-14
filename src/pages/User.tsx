@@ -15,6 +15,7 @@ const User = () => {
   const { tests } = useTestStore();
   const [testId, setTestId] = useState<number | "">("");
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const User = () => {
     if (test) {
       if (test.active) {
         setSelectedTest(test);
+        setUserAnswers(Array(test.commit).fill(""));
         setShowModal(false);
       } else {
         setModalMessage("Bu test yopilgan!");
@@ -37,11 +39,29 @@ const User = () => {
     }
   };
 
+  const handleAnswerChange = (index: number, value: string) => {
+    const updatedAnswers = [...userAnswers];
+    updatedAnswers[index] = value;
+    setUserAnswers(updatedAnswers);
+  };
+
+  const handleSubmit = () => {
+    if (!selectedTest) return;
+
+    const result = userAnswers.map((answer, index) =>
+      answer.trim().toLowerCase() === selectedTest.questions[index].trim().toLowerCase()
+    );
+
+    const resultText = result
+      .map((isCorrect, index) => `Savol ${index + 1}: ${isCorrect ? "To‘g‘ri" : "Noto‘g‘ri"}`)
+      .join("\n");
+    setModalMessage(`Natijalar:\n${resultText}`);
+    setShowModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-gray-100 p-6">
-      <h1 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
-        User Sahifasi
-      </h1>
+      <h1 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">User Sahifasi</h1>
       <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6">
         <div className="mb-6">
           <input
@@ -61,22 +81,25 @@ const User = () => {
 
         {selectedTest && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              {selectedTest.name}
-            </h2>
-            {selectedTest.questions.map((q, index) => (
+            <h2 className="text-xl font-bold text-gray-800 mb-4">{selectedTest.name}</h2>
+            {selectedTest.questions.map((_, index) => (
               <div key={index} className="mb-4">
-                <label className="block font-medium text-gray-700">{`Savol ${
-                  index + 1
-                }:`}</label>
+                <label className="block font-medium text-gray-700">{`Savol ${index + 1}:`}</label>
                 <input
                   type="text"
-                  value={q}
-                  readOnly
-                  className="border border-gray-300 p-3 w-full rounded-lg bg-gray-100 text-gray-600"
+                  placeholder={`Javobingizni kiriting`}
+                  value={userAnswers[index]}
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             ))}
+            <button
+              onClick={handleSubmit}
+              className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md transition-all w-full"
+            >
+              Jo‘natish
+            </button>
           </div>
         )}
       </div>
@@ -84,7 +107,7 @@ const User = () => {
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-            <p className="text-gray-700">{modalMessage}</p>
+            <pre className="text-gray-700 whitespace-pre-wrap">{modalMessage}</pre>
             <button
               onClick={() => setShowModal(false)}
               className="mt-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg w-full"

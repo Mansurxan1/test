@@ -133,35 +133,38 @@ const Home = () => {
               <p className="text-red-600 text-sm mb-6 text-center bg-red-100 p-2 rounded">{errorMessage}</p>
             )}
             <div className="space-y-4">
-              <input
-                type="text"
-                value={editingTest.name}
-                onChange={(e) => {
-                  setEditingTest({ ...editingTest, name: e.target.value });
-                  setErrorMessage("");
-                }}
-                placeholder="Test nomi"
-                className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-              <input
-                type="number"
-                value={editingTest.commit}
-                onChange={(e) => handleCommitChange(Number(e.target.value))}
-                placeholder="Savollar soni"
-                className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-              <input
-                type="number"
-                value={editingTest.checked}
-                onChange={(e) =>
-                  setEditingTest({
-                    ...editingTest,
-                    checked: Number(e.target.value),
-                  })
-                }
-                placeholder="Tekshirilganlar soni"
-                className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">Test nomi</label>
+                <input
+                  type="text"
+                  value={editingTest.name}
+                  onChange={(e) => {
+                    setEditingTest({ ...editingTest, name: e.target.value });
+                    setErrorMessage("");
+                  }}
+                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">Savollar soni</label>
+                <input
+                  type="number"
+                  value={editingTest.commit}
+                  onChange={(e) => handleCommitChange(Number(e.target.value))}
+                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">Tekshirilganlar soni</label>
+                <input
+                  type="number"
+                  value={editingTest.checked}
+                  onChange={(e) =>
+                    setEditingTest({ ...editingTest, checked: Number(e.target.value) })
+                  }
+                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-700">Faol holatda</span>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -169,10 +172,7 @@ const Home = () => {
                     type="checkbox"
                     checked={editingTest.active}
                     onChange={(e) =>
-                      setEditingTest({
-                        ...editingTest,
-                        active: e.target.checked,
-                      })
+                      setEditingTest({ ...editingTest, active: e.target.checked })
                     }
                     className="sr-only peer"
                   />
@@ -190,17 +190,18 @@ const Home = () => {
                 </label>
               </div>
               {editingTest.questions.map((q, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  value={q}
-                  onChange={(e) => {
-                    handleQuestionChange(index, e.target.value);
-                    setErrorMessage("");
-                  }}
-                  placeholder={`Savol ${index + 1}`}
-                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
+                <div key={index} className="mb-2">
+                  <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+                  <input
+                    type="text"
+                    value={q}
+                    onChange={(e) => {
+                      handleQuestionChange(index, e.target.value);
+                      setErrorMessage("");
+                    }}
+                    className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
               ))}
             </div>
             <div className="flex justify-between mt-6">

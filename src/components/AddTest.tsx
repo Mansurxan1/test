@@ -16,7 +16,6 @@ interface AddTestProps {
 
 const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
   const { addTest } = useTestStore();
-  const [id, setId] = useState<string>("");
   const [name, setName] = useState("");
   const [commit, setCommit] = useState<string>("");
   const [questions, setQuestions] = useState<string[]>([]);
@@ -39,17 +38,10 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
   };
 
   const handleSubmit = () => {
-    const idNum = Number(id);
     const commitNum = Number(commit);
 
-    if (!id || !name || !commit || commitNum < 0) {
-      setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring, shu jumladan Test ID!");
-      return;
-    }
-
-    const existingTest = useTestStore.getState().tests.find((t) => t.id === idNum);
-    if (existingTest) {
-      setErrorMessage("Bu ID allaqachon mavjud! Iltimos, boshqa ID kiriting.");
+    if (!name || !commit || commitNum < 0) {
+      setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring!");
       return;
     }
 
@@ -58,8 +50,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
       return;
     }
 
-    const newTest: Test = {
-      id: idNum,
+    const newTest: Omit<Test, "id"> = {
       name,
       commit: commitNum,
       checked: 0,
@@ -76,19 +67,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold mb-4">Yangi Test Qo‘shish</h2>
-        <input
-          type="number"
-          placeholder="Test ID kiriting"
-          value={id}
-          onChange={(e) => {
-            setId(e.target.value);
-            setErrorMessage("");
-          }}
-          className="border p-2 w-full mb-2"
-        />
-        {errorMessage && (
-          <p className="text-red-600 text-sm mb-2">{errorMessage}</p>
-        )}
+        {errorMessage && <p className="text-red-600 text-sm mb-2">{errorMessage}</p>}
         <input
           type="text"
           placeholder="Test nomi"
@@ -104,20 +83,18 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
           className="border p-2 w-full mb-4"
         />
         {questions.map((q, index) => (
-          <input
-            key={index}
-            type="text"
-            placeholder={`Savol ${index + 1}`}
-            value={q}
-            onChange={(e) => handleQuestionChange(index, e.target.value)}
-            className="border p-2 w-full mb-2"
-          />
+          <div key={index} className="mb-2">
+            <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+            <input
+              type="text"
+              value={q}
+              onChange={(e) => handleQuestionChange(index, e.target.value)}
+              className="border p-2 w-full rounded-lg"
+            />
+          </div>
         ))}
         <div className="flex justify-between mt-4">
-          <button
-            onClick={handleSubmit}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
+          <button onClick={handleSubmit} className="bg-green-500 text-white px-4 py-2 rounded">
             Qo‘shish
           </button>
           <button
