@@ -64,42 +64,57 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Yangi Test Qo‘shish</h2>
-        {errorMessage && <p className="text-red-600 text-sm mb-2">{errorMessage}</p>}
-        <input
-          type="text"
-          placeholder="Test nomi"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border p-2 w-full mb-2"
-        />
-        <input
-          type="number"
-          placeholder="Savollar soni"
-          value={commit}
-          onChange={(e) => handleCommitChange(e.target.value)}
-          className="border p-2 w-full mb-4"
-        />
-        {questions.map((q, index) => (
-          <div key={index} className="mb-2">
-            <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg font-bold mb-4 text-center">Yangi Test Qo‘shish</h2>
+        {errorMessage && (
+          <p className="text-red-600 text-sm mb-4 text-center bg-red-100 p-2 rounded">
+            {errorMessage}
+          </p>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Test nomi</label>
             <input
               type="text"
-              value={q}
-              onChange={(e) => handleQuestionChange(index, e.target.value)}
-              className="border p-2 w-full rounded-lg"
+              placeholder="Test nomi"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
-        ))}
-        <div className="flex justify-between mt-4">
-          <button onClick={handleSubmit} className="bg-green-500 text-white px-4 py-2 rounded">
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Savollar soni</label>
+            <input
+              type="number"
+              placeholder="Savollar soni"
+              value={commit}
+              onChange={(e) => handleCommitChange(e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          {questions.map((q, index) => (
+            <div key={index}>
+              <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => handleQuestionChange(index, e.target.value)}
+                className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
+          <button
+            onClick={handleSubmit}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all"
+          >
             Qo‘shish
           </button>
           <button
             onClick={() => setIsAdding(false)}
-            className="bg-gray-500 text-white px-4 py-2 rounded"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all"
           >
             Bekor qilish
           </button>

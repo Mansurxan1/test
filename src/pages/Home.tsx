@@ -70,57 +70,60 @@ const Home = () => {
         Admin Panel - Testlar
       </h1>
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-            <tr>
-              <th className="py-3 px-4">ID</th>
-              <th className="py-3 px-4">Name</th>
-              <th className="py-3 px-4">Tests Commit</th>
-              <th className="py-3 px-4">Checked</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Edit</th>
-              <th className="py-3 px-4">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tests.map((test, index) => (
-              <tr
-                key={test.id}
-                className={`text-center ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } hover:bg-gray-100 transition-colors`}
-              >
-                <td className="py-3 px-4 font-medium text-gray-700">{test.id}</td>
-                <td className="py-3 px-4 font-medium text-gray-700">{test.name}</td>
-                <td className="py-3 px-4 text-gray-600">{test.commit}</td>
-                <td className="py-3 px-4 text-gray-600">{test.checked}</td>
-                <td className="py-3 px-4">
-                  {test.active ? (
-                    <span className="text-green-600 font-semibold">Faol</span>
-                  ) : (
-                    <span className="text-red-600 font-semibold">Yopilgan</span>
-                  )}
-                </td>
-                <td className="py-3 px-4">
-                  <button
-                    onClick={() => handleEdit(test)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-lg shadow-md transition-all"
-                  >
-                    Tahrirlash
-                  </button>
-                </td>
-                <td className="py-3 px-4">
-                  <button
-                    onClick={() => handleDelete(test.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg shadow-md transition-all"
-                  >
-                    O'chirish
-                  </button>
-                </td>
+        {/* Jadvalni scroll qilish uchun div */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto">
+            <thead className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+              <tr>
+                <th className="py-3 px-4 whitespace-nowrap">ID</th>
+                <th className="py-3 px-4 whitespace-nowrap">Name</th>
+                <th className="py-3 px-4 whitespace-nowrap">Tests Commit</th>
+                <th className="py-3 px-4 whitespace-nowrap">Checked</th>
+                <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                <th className="py-3 px-4 whitespace-nowrap">Edit</th>
+                <th className="py-3 px-4 whitespace-nowrap">Delete</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tests.map((test, index) => (
+                <tr
+                  key={test.id}
+                  className={`text-center ${
+                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  } hover:bg-gray-100 transition-colors`}
+                >
+                  <td className="py-3 px-4 font-medium text-gray-700 whitespace-nowrap">{test.id}</td>
+                  <td className="py-3 px-4 font-medium text-gray-700 whitespace-nowrap">{test.name}</td>
+                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.commit}</td>
+                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.checked}</td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    {test.active ? (
+                      <span className="text-green-600 font-semibold">Faol</span>
+                    ) : (
+                      <span className="text-red-600 font-semibold">Yopilgan</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleEdit(test)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-lg shadow-md transition-all"
+                    >
+                      Tahrirlash
+                    </button>
+                  </td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleDelete(test.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg shadow-md transition-all"
+                    >
+                      O'chirish
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {editingTest && (
