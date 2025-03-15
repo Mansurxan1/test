@@ -1,22 +1,11 @@
 import { useState } from "react";
 import { useTestStore } from "../store";
 
-interface Test {
-  id: number;
-  name: string;
-  commit: number;
-  checked: number;
-  active: boolean;
-  questions: string[];
-}
-
-interface AddTestProps {
-  setIsAdding: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
-  const { addTest } = useTestStore();
-  const [name, setName] = useState("");
+const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boolean>> }> = ({
+  setIsAdding,
+}) => {
+  const { addTest, user } = useTestStore();
+  const [name, setName] = useState(user?.full_name || "");
   const [commit, setCommit] = useState<string>("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -51,17 +40,18 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
       return;
     }
 
-    const newTest: Omit<Test, "id"> = {
+    const testData = {
       name,
-      commit: commitNum,
-      checked: 0,
-      active: true,
-      questions,
+      owner_chat_id: user?.chat_id, 
+      test_count: commitNum,
+      answers_json: questions.map((q, idx) => ({ id: idx + 1, answer: q })),
     };
+
+    console.log("Yuborilayotgan ma'lumot:", testData);
 
     setIsLoading(true);
     try {
-      await addTest(newTest);
+      await addTest(testData);
       setErrorMessage("");
       setIsAdding(false);
     } catch (error) {
@@ -75,6 +65,11 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold mb-4 text-center">Yangi Test Qo‘shish</h2>
+        {user && (
+          <p className="text-center mb-4 text-gray-600">
+            {user.full_name} ({user.region}, {user.class})
+          </p>
+        )}
         {errorMessage && (
           <p className="text-red-600 text-sm mb-4 text-center bg-red-100 p-2 rounded">
             {errorMessage}

@@ -1,164 +1,171 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import axios from "axios";
+import { create } from 'zustand';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
+const DEFAULT_CHAT_ID = '1411561011'; 
+
+interface User {
+  id: string;
+  full_name: string;
+  chat_id: string;
+  role: string;
+  status: string;
+  region: string;
+  class: string;
+}
 
 interface Test {
   id: number;
   name: string;
-  commit: number;
-  checked: number;
-  active: boolean;
-  questions: string[];
-}
-
-interface TestStore {
-  tests: Test[];
-  addTest: (test: Omit<Test, "id">) => Promise<void>;
-  updateTest: (updatedTest: Test) => Promise<void>;
-  deleteTest: (id: number) => Promise<void>;
-  fetchTests: () => Promise<void>;
-}
-
-interface ApiTest {
-  id: number;
-  name: string;
   owner_chat_id: string;
   test_count: number;
-  open_test_answers_count: number | null;
-  is_active: boolean;
-  is_deleted: boolean;
   answers: string;
   checked_count: number;
+  is_active: boolean;
+  is_deleted: boolean;
   created_at: string;
 }
 
-interface AddTestPayload {
-  name: string;
-  owner_chat_id: string;
-  test_count: number;
-  answers_json: { id: number; answer: string }[];
+interface Answer {
+  id: number;
+  answer: string;
 }
 
-export const useTestStore = create<TestStore>()(
-  persist(
-    (set) => ({
-      tests: [],
-      addTest: async (test) => {
-        try {
-          const payload: AddTestPayload = {
-            name: test.name,
-            owner_chat_id: "123456789",
-            test_count: test.commit,
-            answers_json: test.questions.map((answer, index) => ({
-              id: index + 1,
-              answer,
-            })),
-          };
+interface TestState {
+  user: User | null;
+  tests: Test[];
+  loading: boolean;
+  error: string | null;
+  fetchUser: (chatId?: string) => Promise<void>;
+  fetchTests: () => Promise<void>;
+  createTest: (testData: {
+    name: string;
+    owner_chat_id?: string;
+    test_count: number;
+    answers_json: Answer[];
+  }) => Promise<void>;
+  updateTest: (id: number, testData: {
+    name: string;
+    owner_chat_id?: string;
+    test_count: number;
+    answers_json: Answer[];
+    is_active: boolean;
+  }) => Promise<void>;
+  deleteTest: (id: number) => Promise<void>;
+  addTest: (testData: {
+    name: string;
+    owner_chat_id?: string;
+    test_count: number;
+    answers_json: Answer[];
+  }) => Promise<void>;
+}
 
-          const response = await axios.post<ApiTest>(
-            `${import.meta.env.VITE_API_URL}`,
-            payload,
-            {
-              headers: {
-                'Accept': '*/*',
-                'Content-Type': 'application/json',
-              },
-            }
-          );
+export const useTestStore = create<TestState>((set) => ({
+  user: null,
+  tests: [],
+  loading: false,
+  error: null,
 
-          const newTest: Test = {
-            id: response.data.id,
-            name: response.data.name,
-            commit: response.data.test_count,
-            checked: response.data.checked_count,
-            active: response.data.is_active,
-            questions: JSON.parse(response.data.answers).map((ans: { answer: string }) => ans.answer),
-          };
+  fetchUser: async (chatId?: string) => {
+    const defaultChatId = chatId || DEFAULT_CHAT_ID;
+    try {
+      set({ loading: true });
+      const response = await axios.get(`${API_URL}/users/${defaultChatId}`);
+      set({ user: response.data.data, loading: false });
+    } catch (error) {
+      set({ error: 'Userni yuklashda xatolik yuz berdi', loading: false });
+    }
+  },
 
-          set((state) => ({
-            tests: [...state.tests, newTest].sort((a, b) => a.id - b.id),
-          }));
-        } catch (error) {
-          console.error("Test qo'shishda xatolik:", error);
-          throw error;
-        }
-      },
+  fetchTests: async () => {
+    try {
+      set({ loading: true });
+      const response = await axios.get(`${API_URL}/tests`);
+      const sortedTests = response.data.data.sort((a: Test, b: Test) => a.id - b.id);
+      set({ tests: sortedTests, loading: false });
+    } catch (error) {
+      set({ error: 'Testlarni yuklashda xatolik yuz berdi', loading: false });
+    }
+  },
 
-      updateTest: async (updatedTest) => {
-        try {
-          const payload = {
-            name: updatedTest.name,
-            owner_chat_id: "123456789",
-            test_count: updatedTest.commit,
-            answers_json: updatedTest.questions.map((answer, index) => ({
-              id: index + 1,
-              answer,
-            })),
-            is_active: updatedTest.active,
-          };
+  createTest: async (testData) => {
+    const payload = {
+      ...testData,
+      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID, 
+    };
+    console.log('Create Test Payload:', payload); 
+    try {
+      set({ loading: true });
+      const response = await axios.post(`${API_URL}/tests`, payload, {
+        headers: {
+          'Accept': '*/*',
+          'Content-Type': 'application/json',
+        },
+      });
+      set((state) => ({
+        tests: [...state.tests, response.data.data].sort((a, b) => a.id - b.id),
+        loading: false,
+      }));
+    } catch (error) {
+      set({ error: 'Test yaratishda xatolik yuz berdi', loading: false });
+    }
+  },
 
-          const response = await axios.put<ApiTest>(
-            `${import.meta.env.VITE_API_URL}/${updatedTest.id}`,
-            payload,
-            {
-              headers: {
-                'Accept': '*/*',
-                'Content-Type': 'application/json',
-              },
-            }
-          );
+  addTest: async (testData) => {
+    const payload = {
+      ...testData,
+      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID,
+    };
+    console.log('Add Test Payload:', payload); 
+    try {
+      set({ loading: true });
+      const response = await axios.post(`${API_URL}/tests`, payload, {
+        headers: {
+          'Accept': '*/*',
+          'Content-Type': 'application/json',
+        },
+      });
+      set((state) => ({
+        tests: [...state.tests, response.data.data].sort((a, b) => a.id - b.id),
+        loading: false,
+      }));
+    } catch (error) {
+      set({ error: 'Test qo‘shishda xatolik yuz berdi', loading: false });
+    }
+  },
 
-          const transformedTest: Test = {
-            id: response.data.id,
-            name: response.data.name,
-            commit: response.data.test_count,
-            checked: response.data.checked_count,
-            active: response.data.is_active,
-            questions: JSON.parse(response.data.answers).map((ans: { answer: string }) => ans.answer),
-          };
+  updateTest: async (id, testData) => {
+    const payload = {
+      ...testData,
+      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID, 
+    };
+    console.log('Update Test Payload:', payload);
+    try {
+      set({ loading: true });
+      const response = await axios.put(`${API_URL}/tests/${id}`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      set((state) => ({
+        tests: state.tests.map((test) => (test.id === id ? response.data.data : test)).sort((a, b) => a.id - b.id),
+        loading: false,
+      }));
+    } catch (error) {
+      set({ error: 'Testni yangilashda xatolik yuz berdi', loading: false });
+    }
+  },
 
-          set((state) => ({
-            tests: state.tests.map((t) => (t.id === updatedTest.id ? transformedTest : t)).sort((a, b) => a.id - b.id),
-          }));
-        } catch (error) {
-          console.error("Testni yangilashda xatolik:", error);
-          throw error;
-        }
-      },
-
-      deleteTest: async (id) => {
-        try {
-          // Optimistik yangilash: API javobini kutmasdan UI dan o‘chirish
-          set((state) => ({
-            tests: state.tests.filter((t) => t.id !== id).sort((a, b) => a.id - b.id),
-          }));
-          // API dan o‘chirish
-          await axios.delete(`${import.meta.env.VITE_API_URL}/${id}`);
-        } catch (error) {
-          console.error("Testni o'chirishda xatolik:", error);
-          // Xatolik yuz bersa, avvalgi holatni qaytarish mumkin (agar kerak bo‘lsa)
-          throw error;
-        }
-      },
-
-      fetchTests: async () => {
-        try {
-          const response = await axios.get<ApiTest[]>(`${import.meta.env.VITE_API_URL}`);
-          const transformedTests: Test[] = response.data.map((apiTest) => ({
-            id: apiTest.id,
-            name: apiTest.name,
-            commit: apiTest.test_count,
-            checked: apiTest.checked_count,
-            active: apiTest.is_active,
-            questions: JSON.parse(apiTest.answers).map((ans: { answer: string }) => ans.answer),
-          }));
-
-          set({ tests: transformedTests.sort((a, b) => a.id - b.id) });
-        } catch (error) {
-          console.error("Testlarni olishda xatolik:", error);
-        }
-      },
-    }),
-    { name: "test-store" }
-  )
-);
+  deleteTest: async (id) => {
+    try {
+      set({ loading: true });
+      await axios.delete(`${API_URL}/tests/${id}`);
+      set((state) => ({
+        tests: state.tests.filter((test) => test.id !== id).sort((a, b) => a.id - b.id),
+        loading: false,
+      }));
+    } catch (error) {
+      set({ error: "Testni o'chirishda xatolik yuz berdi", loading: false });
+    }
+  },
+}));

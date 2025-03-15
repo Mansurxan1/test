@@ -1,38 +1,40 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import AddTest from "../components/AddTest";
 import { useTestStore } from "../store";
 
-interface Test {
-  id: number;
-  name: string;
-  commit: number;
-  checked: number;
-  active: boolean;
-  questions: string[];
-}
-
 const Home = () => {
-  const { tests, updateTest, deleteTest, fetchTests } = useTestStore();
-  const [editingTest, setEditingTest] = useState<Test | null>(null);
+  const { chat_id: paramChatId } = useParams<{ chat_id?: string }>();
+  const chat_id = paramChatId || '1411561011';
+  const { tests, updateTest, deleteTest, fetchTests, fetchUser, user } = useTestStore();
+  const [editingTest, setEditingTest] = useState<any | null>(null);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showAdminInfo, setShowAdminInfo] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchTests(); 
-  }, [fetchTests]);
+    fetchUser(chat_id);
+    fetchTests();
+  }, [chat_id, fetchTests, fetchUser]);
 
   const handleDelete = async (id: number) => {
     try {
       await deleteTest(id);
-      setErrorMessage(""); 
+      setErrorMessage("");
     } catch (error) {
       setErrorMessage("Testni o'chirishda xatolik yuz berdi!");
     }
   };
 
-  const handleEdit = (test: Test) => {
-    setEditingTest(test);
-    setIsAdding(false); 
+  const handleEdit = (test: any) => {
+    setEditingTest({
+      ...test,
+      commit: test.test_count,
+      checked: test.checked_count,
+      active: test.is_active,
+      questions: JSON.parse(test.answers).map((ans: any) => ans.answer),
+    });
+    setIsAdding(false);
     setErrorMessage("");
   };
 
@@ -43,15 +45,24 @@ const Home = () => {
         return;
       }
 
-      if (editingTest.questions.some((q) => q.trim() === "")) {
+      if (editingTest.questions.some((q: string) => q.trim() === "")) {
         setErrorMessage("Iltimos, barcha savol maydonlarini to‘ldiring!");
         return;
       }
 
       try {
-        await updateTest(editingTest);
+        await updateTest(editingTest.id, {
+          name: editingTest.name,
+          owner_chat_id: editingTest.owner_chat_id, 
+          test_count: editingTest.commit,
+          answers_json: editingTest.questions.map((q: string, idx: number) => ({
+            id: idx + 1,
+            answer: q,
+          })),
+          is_active: editingTest.active,
+        });
         setErrorMessage("");
-        setEditingTest(null); 
+        setEditingTest(null);
       } catch (error) {
         setErrorMessage("Testni yangilashda xatolik yuz berdi!");
       }
@@ -81,6 +92,21 @@ const Home = () => {
       <h1 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
         Admin Paneli - Testlar
       </h1>
+      <div className="text-center mb-6">
+        <button
+          onClick={() => setShowAdminInfo(!showAdminInfo)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition-all"
+        >
+          {showAdminInfo ? "Adminni yashirish" : "Admin ma'lumotlari"}
+        </button>
+        {showAdminInfo && user && (
+          <div className="mt-4 text-gray-700">
+            <p><strong>Ism:</strong> {user.full_name}</p>
+            <p><strong>Region:</strong> {user.region}</p>
+            <p><strong>Sinf:</strong> {user.class}</p>
+          </div>
+        )}
+      </div>
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto">
@@ -99,16 +125,14 @@ const Home = () => {
               {tests.map((test, index) => (
                 <tr
                   key={test.id}
-                  className={`text-center ${
-                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-gray-100 transition-colors`}
+                  className={`text-center ${index % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100 transition-colors`}
                 >
                   <td className="py-3 px-4 font-medium text-gray-700 whitespace-nowrap">{test.id}</td>
                   <td className="py-3 px-4 font-medium text-gray-700 whitespace-nowrap">{test.name}</td>
-                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.commit}</td>
-                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.checked}</td>
+                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.test_count}</td>
+                  <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{test.checked_count}</td>
                   <td className="py-3 px-4 whitespace-nowrap">
-                    {test.active ? (
+                    {test.is_active ? (
                       <span className="text-green-600 font-semibold">Faol</span>
                     ) : (
                       <span className="text-red-600 font-semibold">Yopilgan</span>
@@ -152,11 +176,8 @@ const Home = () => {
                 <input
                   type="text"
                   value={editingTest.name}
-                  onChange={(e) => {
-                    setEditingTest({ ...editingTest, name: e.target.value });
-                    setErrorMessage("");
-                  }}
-                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  onChange={(e) => setEditingTest({ ...editingTest, name: e.target.value })}
+                  className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -165,72 +186,45 @@ const Home = () => {
                   type="number"
                   value={editingTest.commit}
                   onChange={(e) => handleCommitChange(Number(e.target.value))}
-                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Tekshirilganlar soni</label>
-                <input
-                  type="number"
-                  value={editingTest.checked}
-                  onChange={(e) =>
-                    setEditingTest({ ...editingTest, checked: Number(e.target.value) })
-                  }
-                  className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-gray-700">Faol holatda</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editingTest.active}
-                    onChange={(e) =>
-                      setEditingTest({ ...editingTest, active: e.target.checked })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div
-                    className={`w-10 h-6 rounded-full transition-all duration-300 ease-in-out ${
-                      editingTest.active ? "bg-green-600" : "bg-red-600"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5 ${
-                        editingTest.active ? "left-4" : "left-0.5"
-                      } transition-all duration-300 ease-in-out`}
-                    ></div>
-                  </div>
-                </label>
-              </div>
-              {editingTest.questions.map((q, index) => (
-                <div key={index} className="mb-2">
+              {editingTest.questions.map((q: string, index: number) => (
+                <div key={index}>
                   <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
                   <input
                     type="text"
                     value={q}
-                    onChange={(e) => {
-                      handleQuestionChange(index, e.target.value);
-                      setErrorMessage("");
-                    }}
-                    className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    onChange={(e) => handleQuestionChange(index, e.target.value)}
+                    className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               ))}
-            </div>
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={handleSave}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow-md transition-all w-1/2 mr-2"
-              >
-                Saqlash
-              </button>
-              <button
-                onClick={() => setEditingTest(null)}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg shadow-md transition-all w-1/2 ml-2"
-              >
-                Bekor qilish
-              </button>
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={editingTest.active ? "true" : "false"}
+                  onChange={(e) => setEditingTest({ ...editingTest, active: e.target.value === "true" })}
+                  className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="true">Faol</option>
+                  <option value="false">Yopilgan</option>
+                </select>
+              </div>
+              <div className="flex justify-between">
+                <button
+                  onClick={handleSave}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                >
+                  Saqlash
+                </button>
+                <button
+                  onClick={() => setEditingTest(null)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Bekor qilish
+                </button>
+              </div>
             </div>
           </div>
         </div>
