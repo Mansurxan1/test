@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const DEFAULT_CHAT_ID = '1411561011'; 
 
 interface User {
   id: string;
@@ -40,13 +39,13 @@ interface TestState {
   fetchTests: () => Promise<void>;
   createTest: (testData: {
     name: string;
-    owner_chat_id?: string;
+    owner_chat_id: string; 
     test_count: number;
     answers_json: Answer[];
   }) => Promise<void>;
   updateTest: (id: number, testData: {
     name: string;
-    owner_chat_id?: string;
+    owner_chat_id: string; 
     test_count: number;
     answers_json: Answer[];
     is_active: boolean;
@@ -54,7 +53,7 @@ interface TestState {
   deleteTest: (id: number) => Promise<void>;
   addTest: (testData: {
     name: string;
-    owner_chat_id?: string;
+    owner_chat_id: string;
     test_count: number;
     answers_json: Answer[];
   }) => Promise<void>;
@@ -67,11 +66,33 @@ export const useTestStore = create<TestState>((set) => ({
   error: null,
 
   fetchUser: async (chatId?: string) => {
-    const defaultChatId = chatId || DEFAULT_CHAT_ID;
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathChatId = window.location.pathname.split('/').filter(Boolean).pop();
+    const finalChatId = chatId || pathChatId || urlParams.get('chat_id');
+
+    if (!finalChatId) {
+      set({
+        error: 'Chat ID URLda kiritilmagan!',
+        loading: false,
+      });
+      return;
+    }
+
     try {
       set({ loading: true });
-      const response = await axios.get(`${API_URL}/users/${defaultChatId}`);
-      set({ user: response.data.data, loading: false });
+      const response = await axios.get(`${API_URL}/users/${finalChatId}`);
+      const userData = response.data.data;
+
+      if (userData.role !== 'admin') {
+        set({
+          user: null,
+          loading: false,
+          error: 'Sizda admin emassiz, kirish taqiqlangan!',
+        });
+        return;
+      }
+
+      set({ user: userData, loading: false, error: null });
     } catch (error) {
       set({ error: 'Userni yuklashda xatolik yuz berdi', loading: false });
     }
@@ -91,9 +112,8 @@ export const useTestStore = create<TestState>((set) => ({
   createTest: async (testData) => {
     const payload = {
       ...testData,
-      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID, 
     };
-    console.log('Create Test Payload:', payload); 
+    console.log('Create Test Payload:', payload);
     try {
       set({ loading: true });
       const response = await axios.post(`${API_URL}/tests`, payload, {
@@ -114,9 +134,8 @@ export const useTestStore = create<TestState>((set) => ({
   addTest: async (testData) => {
     const payload = {
       ...testData,
-      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID,
     };
-    console.log('Add Test Payload:', payload); 
+    console.log('Add Test Payload:', payload);
     try {
       set({ loading: true });
       const response = await axios.post(`${API_URL}/tests`, payload, {
@@ -137,7 +156,6 @@ export const useTestStore = create<TestState>((set) => ({
   updateTest: async (id, testData) => {
     const payload = {
       ...testData,
-      owner_chat_id: testData.owner_chat_id || DEFAULT_CHAT_ID, 
     };
     console.log('Update Test Payload:', payload);
     try {

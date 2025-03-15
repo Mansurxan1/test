@@ -30,6 +30,11 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
   const handleSubmit = async () => {
     const commitNum = Number(commit);
 
+    if (!user?.chat_id) {
+      setErrorMessage("Foydalanuvchi chat ID topilmadi!");
+      return;
+    }
+
     if (!name || !commit || commitNum < 0) {
       setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring!");
       return;
@@ -42,7 +47,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
 
     const testData = {
       name,
-      owner_chat_id: user?.chat_id, 
+      owner_chat_id: user.chat_id,
       test_count: commitNum,
       answers_json: questions.map((q, idx) => ({ id: idx + 1, answer: q })),
     };
@@ -61,8 +66,17 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
     }
   };
 
+  const handleModalClose = () => {
+    setIsAdding(false);
+    document.body.style.overflow = 'auto'; 
+  };
+
+  if (typeof window !== 'undefined') {
+    document.body.style.overflow = 'hidden';
+  }
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50 overflow-y-auto">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold mb-4 text-center">Yangi Test Qo‘shish</h2>
         {user && (
@@ -81,7 +95,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             <input
               type="text"
               placeholder="Test nomi"
-              value={name}
+              value=""
               onChange={(e) => setName(e.target.value)}
               className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               disabled={isLoading}
@@ -122,7 +136,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             {isLoading ? "Qo'shilyapti..." : "Qo‘shish"}
           </button>
           <button
-            onClick={() => setIsAdding(false)}
+            onClick={handleModalClose}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all"
             disabled={isLoading}
           >
