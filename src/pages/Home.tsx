@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import AddTest from "../components/AddTest";
 import { useTestStore } from "../store";
 
@@ -13,22 +12,31 @@ interface Test {
 }
 
 const Home = () => {
-  const { tests, updateTest, deleteTest } = useTestStore();
+  const { tests, updateTest, deleteTest, fetchTests } = useTestStore();
   const [editingTest, setEditingTest] = useState<Test | null>(null);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const navigate = useNavigate();
 
-  const handleDelete = (id: number) => {
-    deleteTest(id);
+  useEffect(() => {
+    fetchTests(); 
+  }, [fetchTests]);
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteTest(id);
+      setErrorMessage(""); 
+    } catch (error) {
+      setErrorMessage("Testni o'chirishda xatolik yuz berdi!");
+    }
   };
 
   const handleEdit = (test: Test) => {
     setEditingTest(test);
+    setIsAdding(false); 
     setErrorMessage("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingTest) {
       if (!editingTest.name || editingTest.commit < 0) {
         setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring!");
@@ -40,9 +48,13 @@ const Home = () => {
         return;
       }
 
-      updateTest(editingTest);
-      setErrorMessage("");
-      setEditingTest(null);
+      try {
+        await updateTest(editingTest);
+        setErrorMessage("");
+        setEditingTest(null); 
+      } catch (error) {
+        setErrorMessage("Testni yangilashda xatolik yuz berdi!");
+      }
     }
   };
 
@@ -67,10 +79,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-6">
       <h1 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
-        Admin Panel - Testlar
+        Admin Paneli - Testlar
       </h1>
       <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-        {/* Jadvalni scroll qilish uchun div */}
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto">
             <thead className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
@@ -225,20 +236,16 @@ const Home = () => {
         </div>
       )}
 
-      <div className="fixed bottom-6 right-6 flex gap-4">
-        <button
-          onClick={() => setIsAdding(true)}
-          className="bg-green-600 hover:bg-green-700 text-white text-xl px-6 py-3 rounded-full shadow-lg transition-all"
-        >
-          + Qo‘shish
-        </button>
-        <button
-          onClick={() => navigate("/user")}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white text-xl px-6 py-3 rounded-full shadow-lg transition-all"
-        >
-          User
-        </button>
-      </div>
+      {!editingTest && (
+        <div className="fixed z-5 bottom-6 right-6">
+          <button
+            onClick={() => setIsAdding(true)}
+            className="bg-green-600 hover:bg-green-700 text-white text-xl px-6 py-3 rounded-full shadow-lg transition-all"
+          >
+            + Qo‘shish
+          </button>
+        </div>
+      )}
 
       {isAdding && <AddTest setIsAdding={setIsAdding} />}
     </div>

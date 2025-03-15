@@ -20,6 +20,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
   const [commit, setCommit] = useState<string>("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleCommitChange = (value: string) => {
     const numValue = value === "" ? "" : Number(value);
@@ -37,7 +38,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
     setQuestions(updatedQuestions);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const commitNum = Number(commit);
 
     if (!name || !commit || commitNum < 0) {
@@ -58,9 +59,16 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
       questions,
     };
 
-    addTest(newTest);
-    setErrorMessage("");
-    setIsAdding(false);
+    setIsLoading(true);
+    try {
+      await addTest(newTest);
+      setErrorMessage("");
+      setIsAdding(false);
+    } catch (error) {
+      setErrorMessage("Testni qo'shishda xatolik yuz berdi!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -81,6 +89,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -91,6 +100,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
               value={commit}
               onChange={(e) => handleCommitChange(e.target.value)}
               className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
             />
           </div>
           {questions.map((q, index) => (
@@ -101,6 +111,7 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
                 value={q}
                 onChange={(e) => handleQuestionChange(index, e.target.value)}
                 className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isLoading}
               />
             </div>
           ))}
@@ -108,13 +119,17 @@ const AddTest: React.FC<AddTestProps> = ({ setIsAdding }) => {
         <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
           <button
             onClick={handleSubmit}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all"
+            className={`bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isLoading}
           >
-            Qo‘shish
+            {isLoading ? "Qo'shilyapti..." : "Qo‘shish"}
           </button>
           <button
             onClick={() => setIsAdding(false)}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto transition-all"
+            disabled={isLoading}
           >
             Bekor qilish
           </button>
