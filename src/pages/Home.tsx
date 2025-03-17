@@ -18,6 +18,11 @@ const Home = () => {
       fetchUser(chat_id);
       fetchTests();
     }
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "auto";
+      }
+    };
   }, [chat_id, fetchTests, fetchUser]);
 
   const handleDelete = async (id: number) => {
@@ -40,7 +45,9 @@ const Home = () => {
     });
     setIsAdding(false);
     setErrorMessage("");
-    document.body.style.overflow = "hidden";
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = "hidden";
+    }
   };
 
   const handleSave = async () => {
@@ -65,7 +72,9 @@ const Home = () => {
       });
       setErrorMessage("");
       setEditingTest(null);
-      document.body.style.overflow = "auto";
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "auto";
+      }
     } catch (error) {
       setErrorMessage("Testni yangilashda xatolik yuz berdi!");
     }
@@ -91,7 +100,16 @@ const Home = () => {
 
   const handleCancelEdit = () => {
     setEditingTest(null);
-    document.body.style.overflow = "auto";
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = "auto";
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDelete(null);
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = "auto";
+    }
   };
 
   if (!chat_id) {
@@ -123,7 +141,6 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <header className="mb-10 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 drop-shadow-md border-b-2 border-gray-300 pb-2">
             Admin Paneli - Testlar
@@ -153,7 +170,6 @@ const Home = () => {
           )}
         </header>
 
-        {/* Test List */}
         <div className="space-y-6">
           {tests.length === 0 ? (
             <div className="bg-white p-10 rounded-2xl shadow-xl text-center border-2 border-gray-400">
@@ -234,7 +250,6 @@ const Home = () => {
           )}
         </div>
 
-        {/* Edit Modal */}
         {editingTest && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border-2 border-gray-400">
@@ -309,7 +324,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
         {confirmDelete !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border-2 border-gray-400">
@@ -318,7 +332,7 @@ const Home = () => {
               <p className="text-sm text-gray-500">Bu amalni qaytarib bo'lmaydi.</p>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
-                  onClick={() => setConfirmDelete(null)}
+                  onClick={handleCancelDelete}
                   className="px-4 py-2 text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-all duration-300"
                 >
                   Bekor qilish
@@ -334,12 +348,13 @@ const Home = () => {
           </div>
         )}
 
-        {/* Add Test Button */}
         <div className="fixed bottom-8 right-8">
           <button
             onClick={() => {
               setIsAdding(true);
-              document.body.style.overflow = "hidden";
+              if (typeof window !== "undefined") {
+                document.body.style.overflow = "hidden";
+              }
             }}
             className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl hover:bg-indigo-700 flex items-center justify-center transition-all duration-300 transform hover:scale-105 border-2 border-indigo-800"
             title="Yangi test qo'shish"

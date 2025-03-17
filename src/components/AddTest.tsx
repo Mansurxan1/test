@@ -5,60 +5,68 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
   setIsAdding,
 }) => {
   const { addTest, user } = useTestStore();
-  const [name, setName] = useState(user?.full_name || "");
-  const [commit, setCommit] = useState<string>("");
-  const [questions, setQuestions] = useState<string[]>([]);
+  const [name, setName] = useState("");
+  const [testCount, setTestCount] = useState<string>("");
+  const [answers, setAnswers] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleCommitChange = (value: string) => {
+  const handleTestCountChange = (value: string) => {
     const numValue = value === "" ? "" : Number(value);
     if (numValue !== "" && numValue >= 0) {
-      setCommit(value);
-      setQuestions(Array(Number(value)).fill(""));
+      setTestCount(value);
+      const newAnswers = Array(Number(value)).fill("");
+      setAnswers(newAnswers);
     } else {
-      setCommit(value);
+      setTestCount(value);
+      setAnswers([]);
     }
   };
 
-  const handleQuestionChange = (index: number, value: string) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[index] = value;
-    setQuestions(updatedQuestions);
+  const handleAnswerChange = (index: number, value: string) => {
+    const updatedAnswers = [...answers];
+    updatedAnswers[index] = value;
+    setAnswers(updatedAnswers);
   };
 
   const handleSubmit = async () => {
-    const commitNum = Number(commit);
+    const testCountNum = Number(testCount);
 
     if (!user?.chat_id) {
       setErrorMessage("Foydalanuvchi chat ID topilmadi!");
       return;
     }
 
-    if (!name || !commit || commitNum < 0) {
+    if (!name || !testCount || testCountNum <= 0) {
       setErrorMessage("Iltimos, barcha maydonlarni to‘g‘ri to‘ldiring!");
       return;
     }
 
-    if (questions.some((q) => q.trim() === "")) {
-      setErrorMessage("Iltimos, barcha savol maydonlarini to‘ldiring!");
+    if (answers.some((a) => a.trim() === "")) {
+      setErrorMessage("Iltimos, barcha javob maydonlarini to‘ldiring!");
       return;
     }
 
     const testData = {
       name,
       owner_chat_id: user.chat_id,
-      test_count: commitNum,
-      answers_json: questions.map((q, idx) => ({ id: idx + 1, answer: q })),
+      test_count: testCountNum,
+      answers_json: answers.map((answer, idx) => ({ 
+        id: idx + 1, 
+        answer 
+      })),
     };
 
-    console.log("Yuborilayotgan ma'lumot:", testData);
+    console.log("API'ga yuborilayotgan ma'lumot:", JSON.stringify(testData, null, 2));
 
     setIsLoading(true);
     try {
       await addTest(testData);
       setErrorMessage("");
       setIsAdding(false);
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = "auto"; 
+      }
     } catch (error) {
       setErrorMessage("Testni qo'shishda xatolik yuz berdi!");
     } finally {
@@ -68,12 +76,10 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
 
   const handleModalClose = () => {
     setIsAdding(false);
-    document.body.style.overflow = 'auto'; 
+    if (typeof window !== "undefined") {
+      document.body.style.overflow = "auto"; 
+    }
   };
-
-  if (typeof window !== 'undefined') {
-    document.body.style.overflow = 'hidden';
-  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50 overflow-y-auto">
@@ -95,7 +101,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             <input
               type="text"
               placeholder="Test nomi"
-              value=""
+              value={name}
               onChange={(e) => setName(e.target.value)}
               className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               disabled={isLoading}
@@ -106,21 +112,22 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             <input
               type="number"
               placeholder="Savollar soni"
-              value={commit}
-              onChange={(e) => handleCommitChange(e.target.value)}
+              value={testCount}
+              onChange={(e) => handleTestCountChange(e.target.value)}
               className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               disabled={isLoading}
             />
           </div>
-          {questions.map((q, index) => (
+          {testCount !== "" && answers.map((answer, index) => (
             <div key={index}>
-              <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+              <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Javob`}</label>
               <input
                 type="text"
-                value={q}
-                onChange={(e) => handleQuestionChange(index, e.target.value)}
+                value={answer}
+                onChange={(e) => handleAnswerChange(index, e.target.value)}
                 className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 disabled={isLoading}
+                placeholder="Javob (masalan: A)"
               />
             </div>
           ))}
