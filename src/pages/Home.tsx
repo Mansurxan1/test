@@ -38,7 +38,7 @@ const Home = () => {
   const handleEdit = (test: any) => {
     setEditingTest({
       ...test,
-      commit: test.test_count,
+      commit: test.test_count.toString(),
       checked: test.checked_count,
       active: test.is_active,
       questions: JSON.parse(test.answers).map((ans: any) => ans.answer),
@@ -51,19 +51,31 @@ const Home = () => {
   };
 
   const handleSave = async () => {
-    if (!editingTest.name || editingTest.commit < 0) {
-      setErrorMessage("Iltimos, barcha maydonlarni to'g'ri to'ldiring!");
+    const commitNum = Number(editingTest.commit);
+
+    // Test nomi bo'sh bo'lsa
+    if (!editingTest.name.trim()) {
+      setErrorMessage("Iltimos, test nomini kiriting!");
       return;
     }
-    if (editingTest.questions.some((q: string) => q.trim() === "")) {
-      setErrorMessage("Iltimos, barcha savol maydonlarini to'ldiring!");
+
+    // Savollar soni bo'sh yoki 0 dan kichik yoki teng bo'lsa
+    if (!editingTest.commit.trim() || commitNum <= 0) {
+      setErrorMessage("Iltimos, savollar sonini to'g'ri kiriting (0 dan katta bo'lishi kerak)!");
       return;
     }
+
+    // Javoblar bo'sh bo'lsa yoki birortasi to'ldirilmagan bo'lsa
+    if (editingTest.questions.length === 0 || editingTest.questions.some((q: string) => q.trim() === "")) {
+      setErrorMessage("Iltimos, barcha javob maydonlarini to'ldiring!");
+      return;
+    }
+
     try {
       await updateTest(editingTest.id, {
         name: editingTest.name,
         owner_chat_id: editingTest.owner_chat_id,
-        test_count: editingTest.commit,
+        test_count: commitNum,
         answers_json: editingTest.questions.map((q: string, idx: number) => ({
           id: idx + 1,
           answer: q,
@@ -80,12 +92,18 @@ const Home = () => {
     }
   };
 
-  const handleCommitChange = (value: number) => {
+  const handleCommitChange = (value: string) => {
     if (editingTest) {
-      const newQuestions = Array(value).fill("");
-      const updatedQuestions = editingTest.questions
-        .slice(0, value)
-        .concat(newQuestions.slice(editingTest.questions.length));
+      const numValue = value === "" ? "" : Number(value);
+      let updatedQuestions: string[];
+      if (numValue === "" || numValue <= 0) {
+        updatedQuestions = [""]; // Bo'sh yoki 0 bo'lsa bitta bo'sh input
+      } else {
+        const newQuestions = Array(numValue).fill("");
+        updatedQuestions = editingTest.questions
+          .slice(0, numValue)
+          .concat(newQuestions.slice(editingTest.questions.length));
+      }
       setEditingTest({ ...editingTest, commit: value, questions: updatedQuestions });
     }
   };
@@ -268,27 +286,29 @@ const Home = () => {
                     type="text"
                     value={editingTest.name}
                     onChange={(e) => setEditingTest({ ...editingTest, name: e.target.value })}
+                    placeholder="Test nomi (masalan: SAT Practice Test #1)"
                     className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Savollar soni</label>
                   <input
-                    type="number"
+                    type="text"
                     value={editingTest.commit}
-                    onChange={(e) => handleCommitChange(Number(e.target.value))}
+                    onChange={(e) => handleCommitChange(e.target.value)}
+                    placeholder="Savollar soni (masalan: 10)"
                     className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
-                    min={0}
                   />
                 </div>
                 <div className="space-y-4 max-h-64 overflow-y-auto">
                   {editingTest.questions.map((q: string, index: number) => (
                     <div key={index}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Savol`}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Javob`}</label>
                       <input
                         type="text"
                         value={q}
                         onChange={(e) => handleQuestionChange(index, e.target.value)}
+                        placeholder="Javob (masalan: A)"
                         className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                       />
                     </div>
@@ -328,7 +348,7 @@ const Home = () => {
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border-2 border-gray-400">
               <h2 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-300 pb-2">Testni o'chirish</h2>
-              <p className="text-gray-700 mb-2">Haqiqatan ham bu testni o'chirishni xohlaysizmi?</p>
+              <p className="text-gray-700 mb-2">Bu testni o'chirishni xohlaysizmi?</p>
               <p className="text-sm text-gray-500">Bu amalni qaytarib bo'lmaydi.</p>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
