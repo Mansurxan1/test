@@ -261,7 +261,7 @@ const Home = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500 block">Maxfiylik</span>
+                      <span className="text-gray-500 block">Maxfiy</span>
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border-2 ${
                           test.is_private
@@ -269,7 +269,7 @@ const Home = () => {
                             : "bg-gray-100 text-gray-800 border-gray-300"
                         }`}
                       >
-                        {test.is_private ? "Maxfiy" : "Ommaviy"}
+                        {test.is_private ? "Cheksiz" : "Maxfiy"}
                       </span>
                     </div>
                   </div>
