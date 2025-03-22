@@ -296,7 +296,7 @@ const Home = () => {
         </div>
 
         {tests.length > TESTS_PER_PAGE && (
-          <div className="mt-8 flex justify-center items-center space-x-2">
+          <div className="mb-16 mt-4 flex justify-center items-center space-x-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
