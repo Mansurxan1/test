@@ -18,7 +18,7 @@ interface Test {
   name: string;
   owner_chat_id: string;
   test_count: number;
-  answers: string; // JSON string sifatida saqlanadi
+  answers: string;
   checked_count: number;
   is_active: boolean;
   is_deleted: boolean;
@@ -113,22 +113,20 @@ export const useTestStore = create<TestState>((set) => ({
       const response = await axios.get(`${API_URL}/tests/all/${chatId}`);
       const apiTests = response.data.data;
 
-      const sortedTests = apiTests
-        .map((test: any) => ({
-          id: test.id,
-          name: test.name,
-          owner_chat_id: test.owner_chat_id,
-          test_count: test.test_count,
-          answers: test.answers, // JSON string sifatida saqlanadi
-          checked_count: test.checked_count,
-          is_active: test.is_active,
-          is_deleted: test.is_deleted,
-          is_private: test.is_private,
-          created_at: test.created_at,
-        }))
-        .sort((a: Test, b: Test) => a.id - b.id);
+      const tests = apiTests.map((test: any) => ({
+        id: test.id,
+        name: test.name,
+        owner_chat_id: test.owner_chat_id,
+        test_count: test.test_count,
+        answers: test.answers,
+        checked_count: test.checked_count,
+        is_active: test.is_active,
+        is_deleted: test.is_deleted,
+        is_private: test.is_private,
+        created_at: test.created_at,
+      }));
 
-      set({ tests: sortedTests, loading: false });
+      set({ tests, loading: false });
     } catch (error) {
       set({ error: "Testlarni yuklashda xatolik yuz berdi", loading: false });
     }
@@ -148,7 +146,7 @@ export const useTestStore = create<TestState>((set) => ({
         },
       });
       set((state) => ({
-        tests: [...state.tests, response.data.data].sort((a, b) => a.id - b.id),
+        tests: [...state.tests, response.data.data],
         loading: false,
       }));
     } catch (error) {
@@ -170,7 +168,7 @@ export const useTestStore = create<TestState>((set) => ({
         },
       });
       set((state) => ({
-        tests: [...state.tests, response.data.data].sort((a, b) => a.id - b.id),
+        tests: [...state.tests, response.data.data],
         loading: false,
       }));
     } catch (error) {
@@ -191,7 +189,7 @@ export const useTestStore = create<TestState>((set) => ({
         },
       });
       set((state) => ({
-        tests: state.tests.map((test) => (test.id === id ? response.data.data : test)).sort((a, b) => a.id - b.id),
+        tests: state.tests.map((test) => (test.id === id ? response.data.data : test)),
         loading: false,
       }));
     } catch (error) {
@@ -204,7 +202,7 @@ export const useTestStore = create<TestState>((set) => ({
       set({ loading: true });
       await axios.delete(`${API_URL}/tests/${id}`);
       set((state) => ({
-        tests: state.tests.filter((test) => test.id !== id).sort((a, b) => a.id - b.id),
+        tests: state.tests.filter((test) => test.id !== id),
         loading: false,
       }));
     } catch (error) {

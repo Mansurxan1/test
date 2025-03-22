@@ -12,6 +12,14 @@ const Home = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [showAdminInfo, setShowAdminInfo] = useState<boolean>(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  const TESTS_PER_PAGE = 10;
+  const totalPages = Math.ceil(tests.length / TESTS_PER_PAGE);
+  const paginatedTests = tests.slice(
+    (currentPage - 1) * TESTS_PER_PAGE,
+    currentPage * TESTS_PER_PAGE
+  );
 
   useEffect(() => {
     if (chat_id) {
@@ -36,7 +44,7 @@ const Home = () => {
   };
 
   const handleEdit = (test: any) => {
-    const parsedAnswers = JSON.parse(test.answers); // JSON stringni parse qilamiz
+    const parsedAnswers = JSON.parse(test.answers);
     setEditingTest({
       ...test,
       commit: test.test_count.toString(),
@@ -130,6 +138,11 @@ const Home = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   if (!chat_id) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -189,7 +202,7 @@ const Home = () => {
         </header>
 
         <div className="space-y-6">
-          {tests.length === 0 ? (
+          {paginatedTests.length === 0 ? (
             <div className="bg-white p-10 rounded-2xl shadow-xl text-center border-2 border-gray-400">
               <svg
                 className="h-16 w-16 text-gray-400 mx-auto mb-4"
@@ -210,7 +223,7 @@ const Home = () => {
               </p>
             </div>
           ) : (
-            tests.map((test) => (
+            paginatedTests.map((test) => (
               <div
                 key={test.id}
                 className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 border-2 border-gray-400"
@@ -279,6 +292,42 @@ const Home = () => {
             ))
           )}
         </div>
+
+        {tests.length > TESTS_PER_PAGE && (
+          <div className="mt-8 flex justify-center items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all duration-300 border-2 border-indigo-800"
+            >
+              Oldingi
+            </button>
+            
+            <div className="flex space-x-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 rounded-lg border-2 ${
+                    currentPage === page
+                      ? "bg-indigo-600 text-white border-indigo-800"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                  } transition-all duration-300`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all duration-300 border-2 border-indigo-800"
+            >
+              Keyingi
+            </button>
+          </div>
+        )}
 
         {editingTest && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
