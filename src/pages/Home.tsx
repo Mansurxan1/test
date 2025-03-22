@@ -269,7 +269,7 @@ const Home = () => {
                             : "bg-gray-100 text-gray-800 border-gray-300"
                         }`}
                       >
-                        {test.is_private ? "Cheksiz" : "Maxfiy"}
+                        {test.is_private ? "Maxfiy" : "Cheksiz"}
                       </span>
                     </div>
                   </div>
