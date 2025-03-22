@@ -146,7 +146,7 @@ export const useTestStore = create<TestState>((set) => ({
         },
       });
       set((state) => ({
-        tests: [...state.tests, response.data.data],
+        tests: [response.data.data, ...state.tests], // Yangi test eng yuqoriga qo'shiladi
         loading: false,
       }));
     } catch (error) {
@@ -168,11 +168,13 @@ export const useTestStore = create<TestState>((set) => ({
         },
       });
       set((state) => ({
-        tests: [...state.tests, response.data.data],
+        tests: [response.data.data, ...state.tests], // Yangi test eng yuqoriga qo'shiladi
         loading: false,
       }));
     } catch (error) {
       set({ error: "Test qo‘shishda xatolik yuz berdi", loading: false });
+      // Agar xatolik yuz bersa, sahifani qayta yuklash
+      window.location.reload();
     }
   },
 

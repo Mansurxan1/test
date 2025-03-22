@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTestStore } from "../store";
 
-// AddTest komponenti - yangi test qo'shish uchun modal
 const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boolean>> }> = ({
   setIsAdding,
 }) => {
@@ -9,31 +8,30 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
   const [name, setName] = useState("");
   const [testCount, setTestCount] = useState<string>("");
   const [answers, setAnswers] = useState<string[]>([]);
-  const [isPrivate, setIsPrivate] = useState(false); // Maxfiylik uchun yangi holat
+  const [isPrivate, setIsPrivate] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Savollar sonini o'zgartirish
   const handleTestCountChange = (value: string) => {
-    const numValue = value === "" ? "" : Number(value);
+    // Faqat raqamlarni qoldirish uchun regex ishlatamiz
+    const filteredValue = value.replace(/[^0-9]/g, "");
+    const numValue = filteredValue === "" ? "" : Number(filteredValue);
     if (numValue !== "" && numValue >= 0) {
-      setTestCount(value);
-      const newAnswers = Array(Number(value)).fill("");
+      setTestCount(filteredValue);
+      const newAnswers = Array(Number(filteredValue)).fill("");
       setAnswers(newAnswers);
     } else {
-      setTestCount(value);
+      setTestCount(filteredValue);
       setAnswers([]);
     }
   };
 
-  // Javobni o'zgartirish
   const handleAnswerChange = (index: number, value: string) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = value;
     setAnswers(updatedAnswers);
   };
 
-  // Testni yuborish
   const handleSubmit = async () => {
     const testCountNum = Number(testCount);
 
@@ -52,18 +50,17 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
       return;
     }
 
+    const reversedAnswers = [...answers].reverse();
     const testData = {
       name,
       owner_chat_id: user.chat_id,
       test_count: testCountNum,
-      answers_json: answers.map((answer, idx) => ({
-        id: idx + 1,
+      answers_json: reversedAnswers.map((answer, idx) => ({
+        id: testCountNum - idx,
         answer,
       })),
-      is_private: isPrivate, // Maxfiylikni qo'shish
+      is_private: isPrivate,
     };
-
-    console.log("API'ga yuborilayotgan ma'lumot:", JSON.stringify(testData, null, 2));
 
     setIsLoading(true);
     try {
@@ -72,6 +69,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
       setIsAdding(false);
       if (typeof window !== "undefined") {
         document.body.style.overflow = "auto";
+        window.location.reload();
       }
     } catch (error) {
       setErrorMessage("Testni qo'shishda xatolik yuz berdi!");
@@ -80,7 +78,6 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
     }
   };
 
-  // Modalni yopish
   const handleModalClose = () => {
     setIsAdding(false);
     if (typeof window !== "undefined") {
@@ -91,7 +88,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50 overflow-y-auto">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4 text-center">Yangi Test Qo‘shish</h2>
+        <h2 className="text-lg font-bold mb-4 text-center">Yangi Test Qo'shish</h2>
         {user && (
           <p className="text-center mb-4 text-gray-600">
             {user.full_name} ({user.region}, {user.class})
@@ -104,7 +101,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
         )}
         <div className="space-y-4">
           <div>
-            <label className="block font-medium text-gray-700 mb-1">Test nomi</label>
+            <label className="block font-medium text-gray-700 mb-1">Test Nomi</label>
             <input
               type="text"
               placeholder="Test nomi"
@@ -115,9 +112,9 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             />
           </div>
           <div>
-            <label className="block font-medium text-gray-700 mb-1">Savollar soni</label>
+            <label className="block font-medium text-gray-700 mb-1">Savollar Soni</label>
             <input
-              type="number"
+              type="text" // type="number" o'rniga "text" ishlatamiz
               placeholder="Savollar soni"
               value={testCount}
               onChange={(e) => handleTestCountChange(e.target.value)}
@@ -125,7 +122,6 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
               disabled={isLoading}
             />
           </div>
-          {/* Maxfiylikni toggle switch sifatida ko'rsatish */}
           <div className="flex items-center justify-between">
             <label className="block font-medium text-gray-700">Maxfiylik</label>
             <div
@@ -144,14 +140,16 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
           {testCount !== "" &&
             answers.map((answer, index) => (
               <div key={index}>
-                <label className="block font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Javob`}</label>
+                <label className="block font-medium text-gray-700 mb-1">{`ID: ${
+                  Number(testCount) - index
+                } - Javob`}</label>
                 <input
                   type="text"
                   value={answer}
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   disabled={isLoading}
-                  placeholder="Javob (masalan: A)"
+                  placeholder="Javob (masalan, A)"
                 />
               </div>
             ))}
@@ -164,7 +162,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             }`}
             disabled={isLoading}
           >
-            {isLoading ? "Qo'shilyapti..." : "Qo‘shish"}
+            {isLoading ? "Qo'shilyapti..." : "Qo'shish"}
           </button>
           <button
             onClick={handleModalClose}

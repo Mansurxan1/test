@@ -13,7 +13,7 @@ const Home = () => {
   const [showAdminInfo, setShowAdminInfo] = useState<boolean>(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
+
   const TESTS_PER_PAGE = 10;
   const totalPages = Math.ceil(tests.length / TESTS_PER_PAGE);
   const paginatedTests = tests.slice(
@@ -45,13 +45,14 @@ const Home = () => {
 
   const handleEdit = (test: any) => {
     const parsedAnswers = JSON.parse(test.answers);
+    const reversedQuestions = parsedAnswers.map((ans: any) => ans.answer).reverse();
     setEditingTest({
       ...test,
       commit: test.test_count.toString(),
       checked: test.checked_count,
       active: test.is_active,
       private: test.is_private,
-      questions: parsedAnswers.map((ans: any) => ans.answer),
+      questions: reversedQuestions,
     });
     setIsAdding(false);
     setErrorMessage("");
@@ -78,13 +79,14 @@ const Home = () => {
       return;
     }
 
+    const reversedQuestions = [...editingTest.questions].reverse();
     try {
       await updateTest(editingTest.id, {
         name: editingTest.name,
         owner_chat_id: editingTest.owner_chat_id,
         test_count: commitNum,
-        answers_json: editingTest.questions.map((q: string, idx: number) => ({
-          id: idx + 1,
+        answers_json: reversedQuestions.map((q: string, idx) => ({
+          id: commitNum - idx,
           answer: q,
         })),
         is_active: editingTest.active,
@@ -181,7 +183,7 @@ const Home = () => {
             className="mt-6 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-xl shadow-md hover:bg-indigo-700 transition-all duration-300 border-2 border-indigo-800"
           >
             <User size={18} className="mr-2" />
-            {showAdminInfo ? "Adminni yashirish" : "Admin ma'lumotlari"}
+            {showAdminInfo ? "Admin Ma'lumotlarini Yashirish" : "Admin Ma'lumotlarini Ko'rsatish"}
             {showAdminInfo ? <ChevronUp size={18} className="ml-2" /> : <ChevronDown size={18} className="ml-2" />}
           </button>
 
@@ -239,7 +241,7 @@ const Home = () => {
                       <span className="font-semibold text-gray-900">{test.name}</span>
                     </div>
                     <div className="border-r border-gray-300 pr-2 sm:border-r-0">
-                      <span className="text-gray-500 block">Savollar soni</span>
+                      <span className="text-gray-500 block">Savollar Soni</span>
                       <span className="font-semibold text-gray-900">{test.test_count}</span>
                     </div>
                     <div className="border-r border-gray-300 pr-2">
@@ -247,7 +249,7 @@ const Home = () => {
                       <span className="font-semibold text-gray-900">{test.checked_count}</span>
                     </div>
                     <div className="border-r border-gray-300 pr-2">
-                      <span className="text-gray-500 block">Status</span>
+                      <span className="text-gray-500 block">Holati</span>
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border-2 ${
                           test.is_active
@@ -255,7 +257,7 @@ const Home = () => {
                             : "bg-red-100 text-red-800 border-red-300"
                         }`}
                       >
-                        {test.is_active ? "Faol" : "Yopilgan"}
+                        {test.is_active ? "Faol" : "Yopiq"}
                       </span>
                     </div>
                     <div>
@@ -275,14 +277,14 @@ const Home = () => {
                     <button
                       onClick={() => handleEdit(test)}
                       className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors duration-300 border-2 border-indigo-300"
-                      title="Testni tahrirlash"
+                      title="Testni Tahrirlash"
                     >
                       <Edit size={18} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete(test.id)}
                       className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors duration-300 border-2 border-red-300"
-                      title="Testni o'chirish"
+                      title="Testni O'chirish"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -333,7 +335,7 @@ const Home = () => {
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border-2 border-gray-400">
               <h2 className="text-xl font-bold text-gray-900 mb-6 text-center border-b-2 border-gray-300 pb-2">
-                Testni tahrirlash (ID: {editingTest.id})
+                Testni Tahrirlash (ID: {editingTest.id})
               </h2>
               {errorMessage && (
                 <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm border-2 border-red-300">
@@ -342,41 +344,43 @@ const Home = () => {
               )}
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Test nomi</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Test Nomi</label>
                   <input
                     type="text"
                     value={editingTest.name}
                     onChange={(e) => setEditingTest({ ...editingTest, name: e.target.value })}
-                    placeholder="Test nomi (masalan: SAT Practice Test #1)"
+                    placeholder="Test nomi (masalan, SAT Practice Test #1)"
                     className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Savollar soni</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Savollar Soni</label>
                   <input
                     type="text"
                     value={editingTest.commit}
                     onChange={(e) => handleCommitChange(e.target.value)}
-                    placeholder="Savollar soni (masalan: 10)"
+                    placeholder="Savollar soni (masalan, 10)"
                     className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-4 max-h-64 overflow-y-auto">
                   {editingTest.questions.map((q: string, index: number) => (
                     <div key={index}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${index + 1} - Javob`}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${
+                        Number(editingTest.commit) - index
+                      } - Javob`}</label>
                       <input
                         type="text"
                         value={q}
                         onChange={(e) => handleQuestionChange(index, e.target.value)}
-                        placeholder="Javob (masalan: A)"
+                        placeholder="Javob (masalan, A)"
                         className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                       />
                     </div>
                   ))}
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700">Holati</label>
                   <div
                     onClick={() => setEditingTest({ ...editingTest, active: !editingTest.active })}
                     className={`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors duration-200 ${
@@ -410,7 +414,7 @@ const Home = () => {
                     onClick={handleCancelEdit}
                     className="px-4 py-2 text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-all duration-300"
                   >
-                    Bekor qilish
+                    Bekor Qilish
                   </button>
                   <button
                     onClick={handleSave}
@@ -427,15 +431,15 @@ const Home = () => {
         {confirmDelete !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border-2 border-gray-400">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-300 pb-2">Testni o'chirish</h2>
-              <p className="text-gray-700 mb-2">Bu testni o'chirishni xohlaysizmi?</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-300 pb-2">Testni O'chirish</h2>
+              <p className="text-gray-700 mb-2">Bu testni o'chirmoqchimisiz?</p>
               <p className="text-sm text-gray-500">Bu amalni qaytarib bo'lmaydi.</p>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={handleCancelDelete}
                   className="px-4 py-2 text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-all duration-300"
                 >
-                  Bekor qilish
+                  Bekor Qilish
                 </button>
                 <button
                   onClick={() => confirmDelete && handleDelete(confirmDelete)}
@@ -457,10 +461,10 @@ const Home = () => {
               }
             }}
             className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl hover:bg-indigo-700 flex items-center justify-center transition-all duration-300 transform hover:scale-105 border-2 border-indigo-800"
-            title="Yangi test qo'shish"
+            title="Yangi Test Qo'shish"
           >
             <PlusCircle size={24} />
-            <span className="sr-only">Yangi test qo'shish</span>
+            <span className="sr-only">Yangi Test Qo'shish</span>
           </button>
         </div>
 
