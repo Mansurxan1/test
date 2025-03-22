@@ -4,7 +4,6 @@ import AddTest from "../components/AddTest";
 import { useTestStore } from "../store";
 import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, User } from "lucide-react";
 
-// Home komponenti - asosiy admin panel sahifasi
 const Home = () => {
   const { chat_id } = useParams<{ chat_id: string }>();
   const { tests, updateTest, deleteTest, fetchTests, fetchUser, user } = useTestStore();
@@ -14,7 +13,6 @@ const Home = () => {
   const [showAdminInfo, setShowAdminInfo] = useState<boolean>(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
-  // Sahifa yuklanganda ma'lumotlarni olish
   useEffect(() => {
     if (chat_id) {
       fetchUser(chat_id);
@@ -27,7 +25,6 @@ const Home = () => {
     };
   }, [chat_id, fetchTests, fetchUser]);
 
-  // Testni o'chirish funksiyasi
   const handleDelete = async (id: number) => {
     try {
       await deleteTest(id);
@@ -38,15 +35,15 @@ const Home = () => {
     }
   };
 
-  // Testni tahrirlash uchun tayyorlash
   const handleEdit = (test: any) => {
+    const parsedAnswers = JSON.parse(test.answers); // JSON stringni parse qilamiz
     setEditingTest({
       ...test,
       commit: test.test_count.toString(),
       checked: test.checked_count,
       active: test.is_active,
-      private: test.is_private, // Maxfiylik holatini qo'shish
-      questions: JSON.parse(test.answers).map((ans: any) => ans.answer),
+      private: test.is_private,
+      questions: parsedAnswers.map((ans: any) => ans.answer),
     });
     setIsAdding(false);
     setErrorMessage("");
@@ -55,7 +52,6 @@ const Home = () => {
     }
   };
 
-  // Testni saqlash
   const handleSave = async () => {
     const commitNum = Number(editingTest.commit);
 
@@ -84,7 +80,7 @@ const Home = () => {
           answer: q,
         })),
         is_active: editingTest.active,
-        is_private: editingTest.private, // Maxfiylikni qo'shish
+        is_private: editingTest.private,
       });
       setErrorMessage("");
       setEditingTest(null);
@@ -96,7 +92,6 @@ const Home = () => {
     }
   };
 
-  // Savollar sonini o'zgartirish
   const handleCommitChange = (value: string) => {
     if (editingTest) {
       const numValue = value === "" ? "" : Number(value);
@@ -113,7 +108,6 @@ const Home = () => {
     }
   };
 
-  // Javobni o'zgartirish
   const handleQuestionChange = (index: number, value: string) => {
     if (editingTest) {
       const updatedQuestions = [...editingTest.questions];
@@ -122,7 +116,6 @@ const Home = () => {
     }
   };
 
-  // Tahrirlashni bekor qilish
   const handleCancelEdit = () => {
     setEditingTest(null);
     if (typeof window !== "undefined") {
@@ -130,7 +123,6 @@ const Home = () => {
     }
   };
 
-  // O'chirishni bekor qilish
   const handleCancelDelete = () => {
     setConfirmDelete(null);
     if (typeof window !== "undefined") {
@@ -138,7 +130,6 @@ const Home = () => {
     }
   };
 
-  // Agar chat_id bo'lmasa, xato ko'rsatish
   if (!chat_id) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -181,7 +172,6 @@ const Home = () => {
             {showAdminInfo ? <ChevronUp size={18} className="ml-2" /> : <ChevronDown size={18} className="ml-2" />}
           </button>
 
-          {/* Admin ma'lumotlari */}
           {showAdminInfo && user && (
             <div className="mt-6 bg-white p-6 rounded-2xl shadow-xl max-w-lg mx-auto transition-all duration-300 border-2 border-gray-400">
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -199,7 +189,6 @@ const Home = () => {
         </header>
 
         <div className="space-y-6">
-          {/* Testlar ro'yxati */}
           {tests.length === 0 ? (
             <div className="bg-white p-10 rounded-2xl shadow-xl text-center border-2 border-gray-400">
               <svg
@@ -256,7 +245,6 @@ const Home = () => {
                         {test.is_active ? "Faol" : "Yopilgan"}
                       </span>
                     </div>
-                    {/* Maxfiylik holatini ko'rsatish */}
                     <div>
                       <span className="text-gray-500 block">Maxfiylik</span>
                       <span
@@ -292,7 +280,6 @@ const Home = () => {
           )}
         </div>
 
-        {/* Testni tahrirlash modali */}
         {editingTest && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border-2 border-gray-400">
@@ -339,7 +326,6 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-                {/* Statusni toggle switch sifatida ko'rsatish */}
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700">Status</label>
                   <div
@@ -355,7 +341,6 @@ const Home = () => {
                     />
                   </div>
                 </div>
-                {/* Maxfiylikni toggle switch sifatida ko'rsatish */}
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700">Maxfiylik</label>
                   <div
@@ -390,7 +375,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Testni o'chirish tasdiqlash modali */}
         {confirmDelete !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border-2 border-gray-400">
@@ -415,7 +399,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Yangi test qo'shish tugmasi */}
         <div className="fixed bottom-8 right-8">
           <button
             onClick={() => {

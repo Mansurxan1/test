@@ -18,21 +18,19 @@ interface Test {
   name: string;
   owner_chat_id: string;
   test_count: number;
-  answers: string;
+  answers: string; // JSON string sifatida saqlanadi
   checked_count: number;
   is_active: boolean;
   is_deleted: boolean;
-  is_private: boolean; 
+  is_private: boolean;
   created_at: string;
 }
 
-// Javob interfeysi
 interface Answer {
   id: number;
   answer: string;
 }
 
-// Test holati interfeysi
 interface TestState {
   user: User | null;
   tests: Test[];
@@ -45,7 +43,7 @@ interface TestState {
     owner_chat_id: string;
     test_count: number;
     answers_json: Answer[];
-    is_private?: boolean; // Maxfiylik ixtiyoriy qo'shildi
+    is_private?: boolean;
   }) => Promise<void>;
   updateTest: (id: number, testData: {
     name: string;
@@ -53,7 +51,7 @@ interface TestState {
     test_count: number;
     answers_json: Answer[];
     is_active: boolean;
-    is_private?: boolean; // Maxfiylik ixtiyoriy qo'shildi
+    is_private?: boolean;
   }) => Promise<void>;
   deleteTest: (id: number) => Promise<void>;
   addTest: (testData: {
@@ -61,24 +59,21 @@ interface TestState {
     owner_chat_id: string;
     test_count: number;
     answers_json: Answer[];
-    is_private?: boolean; // Maxfiylik ixtiyoriy qo'shildi
+    is_private?: boolean;
   }) => Promise<void>;
 }
 
-// Zustand store yaratish
 export const useTestStore = create<TestState>((set) => ({
   user: null,
   tests: [],
   loading: false,
   error: null,
 
-  // Foydalanuvchi ma'lumotlarini olish
   fetchUser: async (chatId?: string) => {
     const urlParams = new URLSearchParams(window.location.search);
     const pathChatId = window.location.pathname.split('/').filter(Boolean).pop();
     const finalChatId = chatId || pathChatId || urlParams.get('chat_id');
 
-    // Agar chat ID bo'lmasa, xato xabari
     if (!finalChatId) {
       set({
         error: 'Chat ID URLda kiritilmagan!',
@@ -92,7 +87,6 @@ export const useTestStore = create<TestState>((set) => ({
       const response = await axios.get(`${API_URL}/users/${finalChatId}`);
       const userData = response.data.data;
 
-      // Agar foydalanuvchi admin bo'lmasa, kirish taqiqlanadi
       if (userData.role !== 'admin') {
         set({
           user: null,
@@ -108,25 +102,43 @@ export const useTestStore = create<TestState>((set) => ({
     }
   },
 
-  // Testlarni olish
   fetchTests: async () => {
     try {
       set({ loading: true });
-      const response = await axios.get(`${API_URL}/tests`);
-      const sortedTests = response.data.data.sort((a: Test, b: Test) => a.id - b.id);
+      const chatId = useTestStore.getState().user?.chat_id;
+      if (!chatId) {
+        set({ error: "Chat ID topilmadi!", loading: false });
+        return;
+      }
+      const response = await axios.get(`${API_URL}/tests/all/${chatId}`);
+      const apiTests = response.data.data;
+
+      const sortedTests = apiTests
+        .map((test: any) => ({
+          id: test.id,
+          name: test.name,
+          owner_chat_id: test.owner_chat_id,
+          test_count: test.test_count,
+          answers: test.answers, // JSON string sifatida saqlanadi
+          checked_count: test.checked_count,
+          is_active: test.is_active,
+          is_deleted: test.is_deleted,
+          is_private: test.is_private,
+          created_at: test.created_at,
+        }))
+        .sort((a: Test, b: Test) => a.id - b.id);
+
       set({ tests: sortedTests, loading: false });
     } catch (error) {
-      set({ error: 'Testlarni yuklashda xatolik yuz berdi', loading: false });
+      set({ error: "Testlarni yuklashda xatolik yuz berdi", loading: false });
     }
   },
 
-  // Yangi test yaratish
   createTest: async (testData) => {
     const payload = {
       ...testData,
-      is_private: testData.is_private ?? false, // Agar is_private kiritilmasa, standart false
+      is_private: testData.is_private ?? false,
     };
-    console.log('Create Test Payload:', payload);
     try {
       set({ loading: true });
       const response = await axios.post(`${API_URL}/tests`, payload, {
@@ -144,13 +156,11 @@ export const useTestStore = create<TestState>((set) => ({
     }
   },
 
-  // Test qo'shish
   addTest: async (testData) => {
     const payload = {
       ...testData,
-      is_private: testData.is_private ?? false, // Agar is_private kiritilmasa, standart false
+      is_private: testData.is_private ?? false,
     };
-    console.log('Add Test Payload:', payload);
     try {
       set({ loading: true });
       const response = await axios.post(`${API_URL}/tests`, payload, {
@@ -164,17 +174,15 @@ export const useTestStore = create<TestState>((set) => ({
         loading: false,
       }));
     } catch (error) {
-      set({ error: 'Test qo‘shishda xatolik yuz berdi', loading: false });
+      set({ error: "Test qo‘shishda xatolik yuz berdi", loading: false });
     }
   },
 
-  // Testni yangilash
   updateTest: async (id, testData) => {
     const payload = {
       ...testData,
-      is_private: testData.is_private ?? false, // Agar is_private kiritilmasa, standart false
+      is_private: testData.is_private ?? false,
     };
-    console.log('Update Test Payload:', payload);
     try {
       set({ loading: true });
       const response = await axios.put(`${API_URL}/tests/${id}`, payload, {
@@ -191,7 +199,6 @@ export const useTestStore = create<TestState>((set) => ({
     }
   },
 
-  // Testni o'chirish
   deleteTest: async (id) => {
     try {
       set({ loading: true });
