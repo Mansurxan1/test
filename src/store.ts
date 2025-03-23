@@ -91,7 +91,7 @@ export const useTestStore = create<TestState>((set) => ({
         set({
           user: null,
           loading: false,
-          error: 'Sizda admin emassiz, kirish taqiqlangan!',
+          error: 'Siz admin emassiz, kirish taqiqlangan!',
         });
         return;
       }
