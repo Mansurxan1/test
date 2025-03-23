@@ -13,7 +13,6 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleTestCountChange = (value: string) => {
-    // Faqat raqamlarni qoldirish uchun regex ishlatamiz
     const filteredValue = value.replace(/[^0-9]/g, "");
     const numValue = filteredValue === "" ? "" : Number(filteredValue);
     if (numValue !== "" && numValue >= 0) {
@@ -50,13 +49,12 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
       return;
     }
 
-    const reversedAnswers = [...answers].reverse();
     const testData = {
       name,
       owner_chat_id: user.chat_id,
       test_count: testCountNum,
-      answers_json: reversedAnswers.map((answer, idx) => ({
-        id: testCountNum - idx,
+      answers_json: answers.map((answer, idx) => ({
+        id: idx + 1, 
         answer,
       })),
       is_private: isPrivate,
@@ -114,7 +112,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
           <div>
             <label className="block font-medium text-gray-700 mb-1">Savollar Soni</label>
             <input
-              type="text" // type="number" o'rniga "text" ishlatamiz
+              type="text"
               placeholder="Savollar soni"
               value={testCount}
               onChange={(e) => handleTestCountChange(e.target.value)}
@@ -141,7 +139,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
             answers.map((answer, index) => (
               <div key={index}>
                 <label className="block font-medium text-gray-700 mb-1">{`ID: ${
-                  Number(testCount) - index
+                  index + 1 
                 } - Javob`}</label>
                 <input
                   type="text"
@@ -149,7 +147,7 @@ const AddTest: React.FC<{ setIsAdding: React.Dispatch<React.SetStateAction<boole
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   disabled={isLoading}
-                  placeholder="Javob (masalan, A)"
+                  placeholder="Javob"
                 />
               </div>
             ))}

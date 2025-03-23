@@ -45,14 +45,14 @@ const Home = () => {
 
   const handleEdit = (test: any) => {
     const parsedAnswers = JSON.parse(test.answers);
-    const reversedQuestions = parsedAnswers.map((ans: any) => ans.answer).reverse();
+    const questions = parsedAnswers.map((ans: any) => ans.answer); 
     setEditingTest({
       ...test,
       commit: test.test_count.toString(),
       checked: test.checked_count,
       active: test.is_active,
       private: test.is_private,
-      questions: reversedQuestions,
+      questions,
     });
     setIsAdding(false);
     setErrorMessage("");
@@ -79,14 +79,13 @@ const Home = () => {
       return;
     }
 
-    const reversedQuestions = [...editingTest.questions].reverse();
     try {
       await updateTest(editingTest.id, {
         name: editingTest.name,
         owner_chat_id: editingTest.owner_chat_id,
         test_count: commitNum,
-        answers_json: reversedQuestions.map((q: string, idx) => ({
-          id: commitNum - idx,
+        answers_json: editingTest.questions.map((q: string, idx: number) => ({
+          id: idx + 1, 
           answer: q,
         })),
         is_active: editingTest.active,
@@ -109,10 +108,9 @@ const Home = () => {
       if (numValue === "" || numValue <= 0) {
         updatedQuestions = [""];
       } else {
-        const newQuestions = Array(numValue).fill("");
-        updatedQuestions = editingTest.questions
-          .slice(0, numValue)
-          .concat(newQuestions.slice(editingTest.questions.length));
+        updatedQuestions = Array(numValue)
+          .fill("")
+          .map((_, idx) => editingTest.questions[idx] || ""); 
       }
       setEditingTest({ ...editingTest, commit: value, questions: updatedQuestions });
     }
@@ -367,7 +365,7 @@ const Home = () => {
                   {editingTest.questions.map((q: string, index: number) => (
                     <div key={index}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${
-                        Number(editingTest.commit) - index
+                        index + 1 // ID ni 1 dan boshlab tartib bo'yicha ko'rsatish
                       } - Javob`}</label>
                       <input
                         type="text"
