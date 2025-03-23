@@ -329,9 +329,9 @@ const Home = () => {
           </div>
         )}
 
-        {editingTest && (
+       {editingTest && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border-2 border-gray-400">
+            <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg h-[90vh] flex flex-col border-2 border-gray-400">
               <h2 className="text-xl font-bold text-gray-900 mb-6 text-center border-b-2 border-gray-300 pb-2">
                 Testni Tahrirlash (ID: {editingTest.id})
               </h2>
@@ -340,7 +340,7 @@ const Home = () => {
                   {errorMessage}
                 </div>
               )}
-              <div className="space-y-5">
+              <div className="flex-1 overflow-y-auto space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Test Nomi</label>
                   <input
@@ -361,11 +361,11 @@ const Home = () => {
                     className="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200"
                   />
                 </div>
-                <div className="space-y-4 max-h-64 overflow-y-auto">
+                <div className="space-y-4">
                   {editingTest.questions.map((q: string, index: number) => (
                     <div key={index}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">{`ID: ${
-                        index + 1 // ID ni 1 dan boshlab tartib bo'yicha ko'rsatish
+                        index + 1
                       } - Javob`}</label>
                       <input
                         type="text"
@@ -377,6 +377,8 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+              <div className="mt-5 space-y-5">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700">Holati</label>
                   <div
